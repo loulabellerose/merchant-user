@@ -4,10 +4,9 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { StyleSheet, Text, View, TextInput, Button, Alert, Item, ScrollView, SafeAreaView } from 'react-native';
-//import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { CheckBox } from 'react-native-elements';
 import Header from '../components/Header';
-//import * as ScreenOrientation from 'expo-screen-orientation';
+import { useNavigation } from '@react-navigation/native';
 import { useForm, Controller } from "react-hook-form";
 var url = 'http://localhost:5000';
 var merchantId = '601dd06d90ffa052d858f2d5';
@@ -16,6 +15,7 @@ var businessId = '601dd16d37d369441e2e83d2';
 const ApplicationForm = ({ navigation }) => {
 
     const { apply, setValue, handleSubmit, control, reset, errors } = useForm();
+    //const navigation = useNavigation();
 
     const onSubmit = data => {
         console.log(data);

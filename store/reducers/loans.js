@@ -8,13 +8,10 @@ const initialState = {
     },
     isFetching: false
 };
-console.log('REDUCER!!!!');
 
 export default (state = initialState, action) => {
     switch (action.type) {
      case SET_LOAN_STATUS: 
-     console.log("set loan status");
-
         return {
             ...state,
             loan: {
@@ -24,8 +21,7 @@ export default (state = initialState, action) => {
             } 
         };
         default: 
-        return state;
-        
+        return state;      
     };    
 }
 

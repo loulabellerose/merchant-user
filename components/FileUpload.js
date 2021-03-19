@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { StyleSheet, Text, View, Image, Button, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Permissions from 'expo-permissions';
 import axios from 'axios';
 import Unorderedlist from 'react-native-unordered-list';
+import { useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
+import { fetchLoan } from '../store/actions/loans';
 var url = 'http://localhost:5000';
-var businessId = '601dd16d37d369441e2e83d2';
+var businessId = '6051e3f87cfb24fe1d922c2f';
 
 export default function FileUpload() {
-
-	//const navigation = useNavigation();
+	const navigation = useNavigation();
+	const dispatch = useDispatch();
 
     const askForPermission = async () => {
 		const permissionResult = await Permissions.askAsync(Permissions.MEDIA_LIBRARY)
@@ -59,7 +61,7 @@ export default function FileUpload() {
 				)
                 .then((res) => {
                     alert('Document submitted')
-                    //Add a redirect or reload here
+                    dispatch(fetchLoan())
 					navigation.navigate('Home')
                 }).catch((error) => {
                     console.log(error)

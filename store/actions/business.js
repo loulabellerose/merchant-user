@@ -1,12 +1,11 @@
-var url = 'http://localhost:5000';
-var businessId = '6051e3f87cfb24fe1d922c2f';
+import { BUSINESS_ID, URL } from '@env';
 
 export const SET_BUSINESS = 'SET_BUSINESS';
 
 export const fetchBusiness = () => {
     console.log('FETCHING BUSINESS');
     return (dispatch) => {
-        fetch(`${url}/business/${businessId}`)
+        fetch(`${URL}/business/${BUSINESS_ID}`)
         .then(res => 
             res.json())
         .then(business => {

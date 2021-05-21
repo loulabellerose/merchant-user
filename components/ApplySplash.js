@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     top: {
         color: '#808080',
         //marginTop: 40,
-        marginLeft: 20,
+        marginLeft: 0,
         fontSize: 40,
         marginBottom: 10
     },

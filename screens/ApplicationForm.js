@@ -1,31 +1,40 @@
 import 'react-native-gesture-handler';
 import React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { StyleSheet, Text, View, TextInput, Button, Alert, ScrollView, SafeAreaView } from 'react-native';
+import { StyleSheet, Text, View, TextInput, Button, Alert, ScrollView, SafeAreaView, Platform } from 'react-native';
 import { CheckBox } from 'react-native-elements';
 import Header from '../components/Header';
+import Constants from 'expo-constants';
 import { useNavigation } from '@react-navigation/native';
+import * as Notifications from 'expo-notifications';
 import { useForm, Controller } from "react-hook-form";
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchLoan } from '../store/actions/loans';
-var url = 'http://localhost:5000';
+import { URL } from '@env';
 
 const ApplicationForm = () => {
     const business = useSelector(state => state.business.business);
     var businessId = business.businessId;
     var merchantId = business.merchantId;
-    var token;
 
     const { apply, setValue, handleSubmit, control, reset, errors } = useForm();
     const [checked, toggleChecked] = useState(false);
     const navigation = useNavigation();
     const dispatch = useDispatch();
+    const [pushToken, setPushToken] = useState('');
+    //var pushToken;
 
     //Pre-populate application form with data already on file
     useEffect(() => {
         fetchMerchantInfo();
     }, []);
+
+    //Ask the user for permission to send them push notifications
+    useEffect(() => {
+        registerForPushNotificationsAsync()
+            .then(token => setPushToken(token));
+    }, [])
 
     const onSubmit = data => {
         //Ensure user has agreed to the Terms
@@ -34,25 +43,32 @@ const ApplicationForm = () => {
             if (data.amount >= 1000 || data.amount >= 10000) {
                 //Ensure form has been completed
                 if (data) {
-                    //First ask user for permission to send them push notifications
-                    registerForPushNotificationsAsync()
-                        //Then send the token to DB as part of the application
-                        .then((token) => {
+                    //console.log('User push token:' + pushToken);
+                    axios({
+                        method: 'post',
+                        url: `${URL}/loans/new`,
+                        data: {
+                            businessId: businessId,
+                            amount: data.amount,
+                            pushToken: pushToken
+                        }
+                    })
+                    
+                        .then(() => {
                             axios({
-                                method: 'post',
-                                url: `${url}/loans/new`,
+                                method: 'put',
+                                url: `${URL}/merchants/${merchantId}`,
                                 data: {
-                                    businessId: businessId,
-                                    amount: data.amount,
                                     email: data.email,
-                                    name: data.name,
+                                    accountHolderName: data.name,
                                     phone: data.phone,
                                     postalAddress: data.postalAddress,
                                     postcode: data.postcode,
-                                    pushToken: token
                                 }
                             })
-                        .then((res) => {
+                        })
+                        
+                        .then(() => {
                             Alert.alert('Your loan application was submitted!')
                             dispatch(fetchLoan())
                             navigation.navigate('Home')
@@ -60,26 +76,23 @@ const ApplicationForm = () => {
                             Alert.alert(error)
                             console.log(error)
                         });
-                    }).catch((error) => {
-                        Alert.alert(error)
-                        console.log(error)
-                    });
-            }
-            else {
+                } else {
+                    console.log('Error');
+                }
+
+            } else {
                 Alert.alert('Please check the amount requested')
             }
-        }
-        else {
+        } else {
             Alert.alert('You must read and agree to the Terms before submitting your loan application')
         }
-    }
     };
 
     const fetchMerchantInfo = () => {
         try {
             axios({
                 method: 'get',
-                url: `${url}/merchants/${merchantId}`
+                url: `${URL}/merchants/${merchantId}`
             })
                 .then(res => {
                     const { accountHolderName, email, phone, postalAddress, postcode } = res.data;
@@ -100,33 +113,33 @@ const ApplicationForm = () => {
     async function registerForPushNotificationsAsync() {
         let token;
         if (Constants.isDevice) {
-          const { status: existingStatus } = await Notifications.getPermissionsAsync();
-          let finalStatus = existingStatus;
-          if (existingStatus !== 'granted') {
-            const { status } = await Notifications.requestPermissionsAsync();
-            finalStatus = status;
-          }
-          if (finalStatus !== 'granted') {
-            alert('Failed to get push token for push notification!');
-            return;
-          }
-          token = (await Notifications.getExpoPushTokenAsync()).data;
-          console.log(token);
+            const { status: existingStatus } = await Notifications.getPermissionsAsync();
+            let finalStatus = existingStatus;
+            if (existingStatus !== 'granted') {
+                const { status } = await Notifications.requestPermissionsAsync();
+                finalStatus = status;
+            }
+            if (finalStatus !== 'granted') {
+                alert('Failed to get push token for push notification!');
+                return;
+            }
+            token = (await Notifications.getExpoPushTokenAsync()).data;
+            console.log(token);
         } else {
-          alert('Must use physical device for Push Notifications');
+            alert('Must use physical device for Push Notifications');
         }
-      
+
         if (Platform.OS === 'android') {
-          Notifications.setNotificationChannelAsync('default', {
-            name: 'default',
-            importance: Notifications.AndroidImportance.MAX,
-            vibrationPattern: [0, 250, 250, 250],
-            lightColor: '#FF231F7C',
-          });
+            Notifications.setNotificationChannelAsync('default', {
+                name: 'default',
+                importance: Notifications.AndroidImportance.MAX,
+                vibrationPattern: [0, 250, 250, 250],
+                lightColor: '#FF231F7C',
+            });
         }
-      
+        console.log(token);
         return token;
-      };
+    };
 
     return (
         <SafeAreaView style={styles.screen}>
@@ -228,6 +241,7 @@ const ApplicationForm = () => {
                                 onBlur={onBlur}
                                 onChangeText={value => onChange(value)}
                                 value={value}
+                                placeholder="Apply for a loan between £1000 and £10,000"
                             />
                         )}
                     />

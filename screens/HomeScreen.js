@@ -4,7 +4,7 @@ import { StyleSheet, Text, View, SafeAreaView } from 'react-native';
 import Header from '../components/Header';
 import ApplySplash from '../components/ApplySplash';
 import FileUpload from '../components/FileUpload';
-import * as Notifications from 'expo-notifications';
+
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchLoan } from '../store/actions/loans';
 import { fetchBusiness } from '../store/actions/business';
@@ -23,12 +23,12 @@ const HomeScreen = () => {
     //Will return the timestamp of when the loan application was submitted
     const loanTimestampString = loan.loanId.toString().substring(0, 8);
     var loanTimestamp = new Date(parseInt(loanTimestampString, 16) * 1000);
-    loanTimestamp = loanTimestamp.toString();
+    loanTimestamp = loanTimestamp.toLocaleString();
 
     //Will return the timestamp of the most recent update to the loan application
     const updateTimestampString = loan.statusId.toString().substring(0, 8);
     var updateTimestamp = new Date(parseInt(updateTimestampString, 16) * 1000);
-    updateTimestamp = updateTimestamp.toString();
+    updateTimestamp = updateTimestamp.toLocaleString();
 
     const loanStatus = loan.status;
     /*
